@@ -24,9 +24,9 @@ export class AppComponent implements OnInit, OnDestroy{
   constructor(private repository: JsonplaceholderRepository) { }
 
   ngOnInit() {
-    this.repository.getResourceList().subscribe((posts:Post[]) => {
+    this.subscriptions$.push(this.repository.getResourceList().subscribe((posts:Post[]) => {
       this.posts = posts;
-    });
+    }));
 
     // vérifier que les appels répondent dans l'ordre voulu via le débuggeur du navigateur (throtle + reseau + debug)
     this.chainedCalls();
@@ -34,7 +34,7 @@ export class AppComponent implements OnInit, OnDestroy{
   }
 
   chainedCalls() {
-    this.repository.getResource('1').pipe(
+    this.subscriptions$.push(this.repository.getResource('1').pipe(
     mergeMap(res => {
       this.post1 = new Post(res);
       return  this.repository.getResource('2');
@@ -43,17 +43,17 @@ export class AppComponent implements OnInit, OnDestroy{
       this.post2 = res;
       return this.repository.getResource('3');
     }))
-    .subscribe(res => this.post3 = res);
+    .subscribe(res => this.post3 = res));
   }
 
   parallelCalls() {
-    forkJoin([
+    this.subscriptions$.push(forkJoin([
       this.repository.getResource('4'),
       this.repository.getResource('5')
     ]).subscribe(([post4, post5]) => {
       this.post4 = post4;
       this.post5 = post5;
-    });
+    }));
   }
 
   ngOnDestroy() {
